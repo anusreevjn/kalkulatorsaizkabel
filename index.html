@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="ms">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Kalkulator Saiz Kabel - (IEE/BS7671)</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* ===== Colour & global tokens (PDF-inspired deep blue) & Theme Variables ===== */
+        :root{
+            /* Light Theme Defaults */
+            --primary: #0056b3;     /* deep blue chosen */
+            --muted: #6b7280;
+            --bg: #f4f6f9;
+            --card-bg: #ffffff;
+            --accent: #e6f7ff;
+            --accent-border: #91d5ff;
+            --warn-bg: #fff3cd;
+            --warn-border: #ffe0a3;
+            --text-color: #222;
+            --title-color: #111827;
+            --border-color: #e6edf6;
+            --card-border: rgba(12,20,40,0.02);
+            --section-divider: #f1f5f9;
+
+            /* Button Color Changes */
+            --btn-primary-bg: #10b981; /* Green for Kira */
+            --btn-primary-shadow: 0 8px 20px rgba(16, 185, 129, 0.2);
+            --btn-secondary-bg: #f87171; /* Red for Set Semula */
+            --btn-secondary-color: #ffffff;
+
+            --radius: 6px;
+            --shadow: 0 8px 22px rgba(7,18,38,0.06);
+            --soft-shadow: 0 4px 12px rgba(7,18,38,0.04);
+            --mono: 'Roboto', system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial;
+        }
+
+        /* Dark Theme Overrides */
+        [data-theme='dark'] {
+            --primary: #60a5fa;     /* Lighter blue for dark theme contrast */
+            --muted: #9ca3af;
+            --bg: #1f2937;
+            --card-bg: #374151;
+            --accent: #1e3a8a;
+            --accent-border: #3b82f6;
+            --warn-bg: #4c3202;
+            --warn-border: #713f12;
+            --text-color: #e5e7eb;
+            --title-color: #f3f4f6;
+            --border-color: #4b5563;
+            --card-border: rgba(255,255,255,0.05);
+            --section-divider: #4b5563;
+            --shadow: 0 8px 22px rgba(0,0,0,0.4);
+            --soft-shadow: 0 4px 12px rgba(0,0,0,0.2);
+
+            /* Dark Theme Button Colors */
+            --btn-primary-bg: #34d399; /* Lighter Green */
+            --btn-secondary-bg: #ef4444; /* Brighter Red */
+        }
+
+
+        /* ===== Reset / base ===== */
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        body{
+            margin:0;
+            font-family:var(--mono);
+            background:linear-gradient(180deg, var(--bg) 0%, var(--bg) 100%); /* Simpler gradient or just solid bg */
+            color:var(--text-color);
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+            line-height:1.45;
+            padding:24px 12px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* ===== Container & Header ===== */
+        .container{
+            max-width:980px;
+            margin:0 auto;
+            padding:0 20px 60px;
+        }
+        .header{
+            text-align:center;
+            margin-bottom:20px;
+        }
+        .logo-title{
+            font-size:1.5rem;
+            font-weight:700;
+            color:var(--primary);
+            margin:0;
+        }
+        .subtitle{
+            margin:6px 0 12px;
+            color:var(--muted);
+            font-size:0.95rem;
+        }
+        .nav-links{display:flex; gap:8px; justify-content:center; flex-wrap:wrap;}
+        .nav-link{
+            background:var(--primary);
+            color:#fff;
+            padding:8px 14px;
+            border-radius:999px;
+            text-decoration:none;
+            font-weight:500;
+            font-size:0.9rem;
+            transition:transform .12s ease, box-shadow .12s ease;
+            box-shadow: var(--soft-shadow);
+        }
+        .nav-link:active,.nav-link:hover{transform:translateY(-2px); box-shadow:var(--shadow)}
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            padding: 8px 12px;
+            background: var(--card-bg);
+            color: var(--primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 500;
+            box-shadow: var(--soft-shadow);
+            transition: background 0.3s, color 0.3s, border-color 0.3s;
+        }
+        .theme-toggle:hover {
+            background: var(--accent);
+        }
+        @media (max-width:640px){
+            .theme-toggle {
+                position: static;
+                margin-bottom: 20px;
+            }
+        }
+
+        /* ===== Card ===== */
+        .card{
+            background:var(--card-bg);
+            border-radius:var(--radius);
+            padding:22px;
+            box-shadow: var(--soft-shadow);
+            margin-bottom:22px;
+            border:1px solid var(--card-border);
+            transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+        .section-title{
+            font-size:1.15rem;
+            font-weight:700;
+            color:var(--title-color);
+            margin:0 0 12px;
+            padding-bottom:8px;
+            border-bottom:1px solid var(--section-divider);
+            transition: color 0.3s, border-color 0.3s;
+        }
+
+        /* ===== Form grid & inputs (compact, PDF-like spacing) ===== */
+        .input-grid{
+            display:grid;
+            grid-template-columns: repeat(auto-fit,minmax(240px,1fr));
+            gap:14px;
+            margin-top:8px;
+        }
+        .input-group label{
+            display:block;
+            font-weight:600;
+            color:var(--muted);
+            font-size:0.9rem;
+            margin-bottom:6px;
+        }
+        .input-group input,
+        .input-group select{
+            width:100%;
+            padding:10px 12px;
+            border-radius:6px;
+            border:1px solid var(--border-color);
+            font-size:0.95rem;
+            background:var(--card-bg);
+            color:var(--text-color);
+            outline:none;
+            transition:box-shadow .12s, border-color .12s, background-color 0.3s, color 0.3s;
+        }
+        .input-group input:focus,
+        .input-group select:focus{
+            border-color:var(--primary);
+            box-shadow:0 6px 18px rgba(0,86,179,0.06);
+        }
+        /* Dark mode adjustment for focus shadow */
+        [data-theme='dark'] .input-group input:focus,
+        [data-theme='dark'] .input-group select:focus{
+            box-shadow:0 6px 18px rgba(96,165,250,0.1);
+        }
+        .note{font-size:0.8rem;color:#8a8f98;font-style:italic;margin-top:6px;display:block}
+
+        /* ===== Buttons (Updated Colors) ===== */
+        .button-group{margin-top:20px; display:flex; gap:12px; flex-wrap:wrap}
+        .btn{
+            border:0;
+            padding:11px 18px;
+            border-radius:8px;
+            font-weight:600;
+            cursor:pointer;
+            font-size:0.95rem;
+            transition:transform .12s ease, box-shadow .12s ease, background-color 0.3s, color 0.3s;
+        }
+        .btn-primary{
+            background:var(--btn-primary-bg); /* Green */
+            color:#fff;
+            box-shadow: var(--btn-primary-shadow);
+        }
+        .btn-primary:hover{transform:translateY(-3px)}
+        .btn-secondary{
+            background:var(--btn-secondary-bg); /* Red */
+            color:var(--btn-secondary-color);
+            box-shadow:none;
+            border:1px solid var(--btn-secondary-bg);
+        }
+        .btn-secondary:hover{transform:translateY(-2px); box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);}
+
+        /* ===== Results grid ===== */
+        .results-grid{
+            display:grid;
+            grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+            gap:12px;
+            margin-top:12px;
+        }
+        .result-item{
+            padding:12px;
+            border-radius:8px;
+            border:1px solid rgba(15,23,42,0.03);
+            background:#fbfdff;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        [data-theme='dark'] .result-item {
+            background: #2a3441;
+            border-color: rgba(255,255,255,0.08);
+        }
+        .result-title{font-size:0.88rem;color:var(--muted);margin-bottom:6px}
+        .result-value{font-size:1.2rem;font-weight:700;color:var(--title-color)}
+
+        .result-conclusion{
+            margin-top:6px;
+            padding:12px;
+            border-radius:8px;
+            background:var(--accent);
+            border:1px solid var(--accent-border);
+            color:var(--primary);
+            font-weight:600;
+            white-space: pre-wrap; /* To handle the \n in conclusionText */
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+        }
+        .result-warning{
+            background:var(--warn-bg) !important;
+            border:1px solid var(--warn-border) !important;
+            color:var(--title-color) !important; /* Adjust text color for readability on warning background */
+        }
+
+        /* ===== Example block & formula monospace ===== */
+        .example-block{
+            background:#fbfbfd;
+            padding:12px;
+            border-radius:8px;
+            border:1px solid #eef3fb;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        [data-theme='dark'] .example-block {
+            background: #2a3441;
+            border-color: #3b82f6;
+        }
+        .formula-line{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; color:var(--primary); margin:6px 0 6px 10px}
+        .example-step{margin-bottom:12px}
+
+        /* ===== Tables / images container responsive ===== */
+        .table-section img{width:100%; min-width:700px; height:auto; border-radius:6px; border:1px solid #eef2fb}
+        [data-theme='dark'] .table-section img {
+            border-color: #3b82f6;
+        }
+
+        /* ===== Footer ===== */
+        .footer {
+            margin: 30px 0 40px; /* space above and below so it doesn't touch page end */
+            padding: 20px 18px 28px; /* extra bottom padding for breathing room */
+            text-align: center;
+            border: 1px solid var(--section-divider); /* subtle outline */
+            border-radius: 10px;
+            background: var(--card-bg);
+            box-shadow: var(--soft-shadow);
+            color: var(--muted);
+            font-size: 0.85rem;
+            width: 100%; /* match the container width when placed inside */
+        }
+
+        /* Dark theme footer adjustments */
+        [data-theme='dark'] .footer {
+            border-color: var(--card-border);
+            background: var(--card-bg);
+        }
+
+
+        /* responsive tweaks */
+        @media (max-width:640px){
+            .logo-title{font-size:1.2rem}
+            .input-grid{grid-template-columns:1fr}
+            .results-grid{grid-template-columns:1fr}
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle Dark/Light Mode">
+            <span id="theme-icon">🔆 Mod Terang</span>
+        </button>
+
+        <header class="header">
+            <h1 class="logo-title">Kalkulator Saiz Kabel</h1>
+            <p class="subtitle">Pengiraan saiz kabel mengikut formula IEE (BS7671:2018)</p>
+            <div class="nav-links">
+                <a class="nav-link" href="#input-form">Parameter Input</a>
+                <a class="nav-link" href="#results-output">Keputusan Kiraan</a>
+                <a class="nav-link" href="#example-solution">Contoh 1</a>
+                <a class="nav-link" href="#table4D1A-ref">Jadual 4D1A</a>
+            </div>
+        </header>
+
+        <section id="input-form" class="card">
+            <h2 class="section-title">Parameter Input</h2>
+
+            <div class="input-grid">
+                <div class="input-group">
+                    <label for="jenis-fasa">Jenis Fasa</label>
+                    <select id="jenis-fasa">
+                        <option value="1">Satu Fasa (1φ)</option>
+                        <option value="3">Tiga Fasa (3φ)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="kuasa">Kuasa Beban (Watt)</label>
+                    <input type="number" id="kuasa" value="1500" min="0" step="1" />
+                </div>
+
+                <div class="input-group">
+                    <label for="voltan">Voltan Bekalan (V)</label>
+                    <input type="number" id="voltan" value="230" min="1" step="1" />
+                </div>
+
+                <div class="input-group">
+                    <label for="faktor-kuasa">Faktor Kuasa (cos θ)</label>
+                    <input type="number" id="faktor-kuasa" value="1" step="0.01" min="0.01" />
+                    <span class="note">Guna cos θ = 1 untuk hasil sama seperti Contoh 1.</span>
+                </div>
+
+                <div class="input-group">
+                    <label for="panjang-kabel">Panjang Kabel (m)</label>
+                    <input type="number" id="panjang-kabel" value="25" min="0.1" step="0.1" />
+                </div>
+
+                <div class="input-group">
+                    <label for="mva-m">mV/A/m (dari Jadual 4D1B)</label>
+                    <input type="number" id="mva-m" value="29" step="0.1" />
+                </div>
+
+                <div class="input-group">
+                    <label for="fuse-rating">Kadaran Fius (A) (I<sub>N</sub>)</label>
+                    <input type="number" id="fuse-rating" value="10" min="0.1" step="0.1" />
+                </div>
+
+                <div class="input-group">
+                    <label for="fuse-correction">Faktor Fius (C<sub>f</sub>)</label>
+                    <input type="number" id="fuse-correction" value="0.725" step="0.001" />
+                    <span class="note">Guna C<sub>f</sub> = 0.725 (contoh BS3036)</span>
+                </div>
+
+                <div class="input-group">
+                    <label for="susutan-dibenarkan">Peratusan Susutan Dibenarkan (%)</label>
+                    <select id="susutan-dibenarkan">
+                        <option value="4">4%</option>
+                        <option value="2.5">2.5%</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="ca">CA (Suhu Ambien)</label>
+                    <input type="number" id="ca" value="1" step="0.01" />
+                </div>
+
+                <div class="input-group">
+                    <label for="cg">CG (Kumpulan Litar)</label>
+                    <input type="number" id="cg" value="1" step="0.01" />
+                </div>
+
+                <div class="input-group">
+                    <label for="ci">CI (Penebatan Terma)</label>
+                    <input type="number" id="ci" value="1" step="0.01" />
+                </div>
+
+                <div class="input-group">
+                    <label for="ct">CT (Suhu Kendalian)</label>
+                    <input type="number" id="ct" value="1" step="0.01" />
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="calculate()">Kira</button>
+                <button class="btn btn-secondary" onclick="resetForm()">Set Semula</button>
+            </div>
+        </section>
+
+        <section id="results-output" class="card" style="display:none;">
+            <h2 class="section-title">Keputusan Pengiraan</h2>
+
+            <div id="conclusion-output" class="result-conclusion"></div>
+
+            <div class="results-grid" style="margin-top:12px;">
+                <div class="result-item">
+                    <p class="result-title">1. Arus Beban (I<sub>B</sub>)</p>
+                    <div class="result-value" id="res-ib">—</div>
+                </div>
+
+                <div class="result-item">
+                    <p class="result-title">2. Keperluan Iz (I<sub>req</sub>) — (Berdasarkan Fius)</p>
+                    <div class="result-value" id="res-iz-req">—</div>
+                </div>
+
+                <div class="result-item">
+                    <p class="result-title">3. Susutan Voltan Maks. (V<sub>D(Max)</sub>)</p>
+                    <div class="result-value" id="res-vd-max">—</div>
+                </div>
+
+                <div class="result-item" id="res-vd-item">
+                    <p class="result-title">4. Susut Voltan Kabel (V<sub>D</sub>)</p>
+                    <div class="result-value" id="res-vd">—</div>
+                </div>
+
+                <div class="result-item">
+                    <p class="result-title">5. Kehilangan Kuasa (P<sub>loss</sub>)</p>
+                    <div class="result-value" id="res-ploss">—</div>
+                </div>
+
+                <div class="result-item">
+                    <p class="result-title">6. Kadaran Fius (I<sub>N</sub>)</p>
+                    <div class="result-value" id="res-in">—</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="example-solution" class="card">
+            <h2 class="section-title">Contoh 1 - Pengiraan Kabel</h2>
+
+            <div class="example-block">
+                <h4 style="font-weight:700;color:var(--primary);margin:0 0 8px">Soalan:</h4>
+                <p style="font-size:0.95rem;margin:0 0 8px">
+                    Beban <strong>1.5kW</strong> dengan voltan bekalan <strong>230V</strong> hendak dipasang di bengkel.
+                    Jarak antara beban dan DB ialah <strong>25m</strong> dengan <strong>pemasangan konduit</strong>.
+                    Litar ini dilindungi oleh fius separuh tertutup <strong>10A (BS3036)</strong>.
+                    Suhu ambien ialah <strong>30°C</strong>.
+                </p>
+            </div>
+
+            <div style="font-weight:700;color:var(--primary);font-size:1.04rem;margin:14px 0 10px">PENYELESAIAN:</div>
+
+            <ol style="padding-left:18px;margin:0">
+                <li class="example-step">
+                    <strong>Arus Beban (Load Current):</strong>
+                    <div class="formula-line">P / V = 1.5kW / 230V = <strong>6.52 A</strong></div>
+                </li>
+
+                <li class="example-step">
+                    <strong>Keperluan Kadaran Kabel (Iz required):</strong>
+                    <div class="formula-line">= Kadaran Fius (I<sub>N</sub>) / Faktor Pembetulan (C<sub>f</sub>)</div>
+                    <div class="formula-line">= 10 A / 0.725 = <strong>13.79 A</strong></div>
+                    <div class="note" style="margin-top:6px">(Contoh menggunakan hanya C<sub>f</sub>. Jika ingin ambil kira CA/CG/CI/CT, lihat keputusan tambahan di bawah.)</div>
+                </li>
+
+                <li class="example-step">
+                    <strong>Pemilihan Kabel:</strong>
+                    <p style="margin:8px 0 0;font-size:0.95rem">Berdasarkan Jadual 4D1A, kabel saiz <strong>1.5mm²</strong> mempunyai Iz = <strong>17.5 A</strong> → sesuai kerana Iz (17.5 A) > Iz required (13.79 A).</p>
+                </li>
+
+                <li class="example-step">
+                    <strong>Susutan Voltan Maksimum Dibenarkan:</strong>
+                    <div class="formula-line">4% × 230 V = <strong>9.2 V</strong></div>
+                </li>
+
+                <li class="example-step">
+                    <strong>Susut Voltan dalam Kabel (mengikut jadual mV/A/m = 29):</strong>
+                    <div class="formula-line">V<sub>D</sub> = I<sub>B</sub> × length × (mV/A/m) / 1000</div>
+                    <div class="formula-line">= 6.52 × 25 × (29 / 1000) = <strong>4.73 V</strong></div>
+                    <p style="margin-top:8px;font-size:0.95rem">Kesimpulan: 4.73 V &lt; 9.2 V → Susut voltan OK; 1.5mm² sesuai.</p>
+                </li>
+
+                <li class="example-step">
+                    <strong>Kehilangan Kuasa dalam Kabel:</strong>
+                    <div class="formula-line">P<sub>loss</sub> = V<sub>D</sub> × I<sub>B</sub> = 4.73 × 6.52 = <strong>30.84 W</strong></div>
+                </li>
+            </ol>
+        </section>
+
+        <section id="table4D1A-ref" class="card">
+            <h2 class="section-title">Jadual Rujukan IEE (BS7671:2018)</h2>
+
+            <h3 style="font-size:1.02rem;margin:0 0 12px">Jadual 4D1A - Keupayaan Membawa Arus (Ampere)</h3>
+            <div class="table-section">
+                <img src="table-4d1a-and-4d1b-1.png" alt="Jadual 4D1A" />
+            </div>
+
+            <div style="height:14px"></div>
+
+            <h3 style="font-size:1.02rem;margin:0 0 12px">Jadual 4D1B - Susut Voltan (mV/A/m)</h3>
+            <div class="table-section">
+                <img src="table-4d1a-and-4d1b-2.png" alt="Jadual 4D1B" />
+            </div>
+
+            <p class="note" style="margin-top:12px">* Jarak yang lebih besar daripada satu diameter kabel akan mengakibatkan susut voltan yang lebih besar.</p>
+        </section>
+
+        <footer class="footer">
+            &copy; All rights reserved. Developed by <strong>MUHAMAD RAZIF BIN RAZAK BBE FPTV</strong> 2025.
+        </footer>
+    </div>
+
+    <script>
+        /* ===== Theme Toggle Logic ===== */
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const root = document.documentElement;
+        
+        // Function to set the theme
+        function setTheme(theme) {
+            root.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            themeIcon.innerHTML = theme === 'dark' ? '🌙 Mod Gelap' : '🔆 Mod Terang';
+        }
+
+        // Check for stored theme or system preference
+        function getPreferredTheme() {
+            const storedTheme = localStorage.getItem('theme');
+            if (storedTheme) {
+                return storedTheme;
+            }
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        // Apply initial theme
+        setTheme(getPreferredTheme());
+
+        // Event listener for theme toggle
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = root.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+        });
+        
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            // Only update if the user hasn't explicitly set a theme (i.e., 'theme' in localStorage is null)
+            if (!localStorage.getItem('theme')) {
+                 setTheme(e.matches ? 'dark' : 'light');
+            }
+        });
+
+        /* ===== Calculator Logic (Unchanged) ===== */
+        function getFloat(id){
+            const el = document.getElementById(id);
+            if(!el) return 0;
+            const v = parseFloat(el.value);
+            return Number.isFinite(v) ? v : 0;
+        }
+
+        function calculate(){
+            // hide results until computed
+            const resultsSection = document.getElementById('results-output');
+            resultsSection.style.display = 'none';
+
+            // parse inputs
+            const fasa = document.getElementById('jenis-fasa').value;
+            const P = getFloat('kuasa');           // W
+            const V = getFloat('voltan');          // V
+            let pf = getFloat('faktor-kuasa');    // power factor
+            if(pf <= 0) pf = 1;
+            const length = getFloat('panjang-kabel');
+            const mv = getFloat('mva-m');         // mV/A/m
+            const maxDropPercent = getFloat('susutan-dibenarkan'); // %
+            const In = getFloat('fuse-rating');   // A
+            const Cf = getFloat('fuse-correction') || 1; // C_f
+
+            // correction factors (left available but not multiplied into example required Iz unless user wants)
+            const CA = Math.max(0.0001, getFloat('ca'));
+            const CG = Math.max(0.0001, getFloat('cg'));
+            const CI = Math.max(0.0001, getFloat('ci'));
+            const CT = Math.max(0.0001, getFloat('ct'));
+
+            // validate essentials
+            if(P <= 0 || V <= 0 || In <= 0 || length <= 0 || mv <= 0){
+                alert("Sila masukkan nilai Kuasa, Voltan, Kadaran Fius, Panjang Kabel dan mV/A/m yang sah (> 0).");
+                return;
+            }
+
+            // 1) Arus Beban (IB)
+            let IB;
+            if(fasa === '1'){
+                // single-phase: IB = P / (V * pf)
+                IB = P / (V * pf);
+            } else {
+                // three-phase: IB = P / (sqrt(3) * V * pf)
+                IB = P / (Math.SQRT3 * V * pf);
+            }
+
+            // 2) Iz required based on fuse and Cf (matches PDF example)
+            // Iz_required_by_fuse = In / Cf
+            const Iz_required_by_fuse = In / Cf;
+
+            // 2b) OPTIONAL: Iz required if ALL correction factors applied (informative)
+            // If user wants full corrected Iz: In / (Cf * CA * CG * CI * CT)
+            const Iz_required_all_cfactors = In / (Cf * CA * CG * CI * CT);
+
+            // 3) Susutan Voltan Maksimum dibenarkan
+            const Vd_max_allowed = (maxDropPercent / 100) * V;
+
+            // 4) Susut Voltan kabel
+            const Vd = (mv * IB * length) / 1000; // mV->V
+
+            // 5) Kehilangan kuasa
+            const Ploss = Vd * IB;
+
+            // determine cable suitability (example uses 1.5mm2 with Iz = 17.5 A)
+            const IzCable_1_5 = 17.5; // from Table 4D1A for example
+            const vdItem = document.getElementById('res-vd-item');
+            vdItem.className = 'result-item'; // Reset class
+
+            let conclusionText = '';
+
+            // Use the PDF example decision: compare Iz_required_by_fuse to Iz cable
+            if(Iz_required_by_fuse <= IzCable_1_5){
+                // check voltage drop also
+                if(Vd <= Vd_max_allowed){
+                    conclusionText = `Kabel 1.5mm² (Iz ${IzCable_1_5} A) adalah **SESUAI**. Susut Voltan (${Vd.toFixed(2)} V) ≤ Maksimum (${Vd_max_allowed.toFixed(2)} V).`;
+                } else {
+                    conclusionText = `Kabel 1.5mm² TIDAK SESUAI dari segi susut voltan. Susut Voltan (${Vd.toFixed(2)} V) > Maksimum (${Vd_max_allowed.toFixed(2)} V). Pertimbangkan saiz kabel lebih besar.`;
+                    vdItem.classList.add('result-warning');
+                }
+            } else {
+                // Iz required > IzCable_1_5
+                if(Vd <= Vd_max_allowed){
+                    conclusionText = `Iz diperlukan (${Iz_required_by_fuse.toFixed(2)} A) melebihi Iz kabel 1.5mm² (${IzCable_1_5} A). Susut voltan OK, tetapi anda perlu pilih kabel dengan Iz ≥ ${Iz_required_by_fuse.toFixed(2)} A.`;
+                    vdItem.classList.add('result-warning');
+                } else {
+                    conclusionText = `Iz diperlukan (${Iz_required_by_fuse.toFixed(2)} A) melebihi Iz kabel 1.5mm² dan Susut Voltan (${Vd.toFixed(2)} V) juga melebihi had (${Vd_max_allowed.toFixed(2)} V). Pilih kabel lebih besar.`;
+                    vdItem.classList.add('result-warning');
+                }
+            }
+
+            // populate results
+            document.getElementById('res-ib').innerText = `${IB.toFixed(2)} A`;
+            document.getElementById('res-iz-req').innerText = `${Iz_required_by_fuse.toFixed(2)} A`;
+            document.getElementById('res-vd-max').innerText = `${Vd_max_allowed.toFixed(2)} V`;
+            document.getElementById('res-vd').innerText = `${Vd.toFixed(2)} V`;
+            document.getElementById('res-ploss').innerText = `${Ploss.toFixed(2)} W`;
+            document.getElementById('res-in').innerText = `${In.toFixed(2)} A`;
+
+            // show additional informative note about full corrections (not used in PDF example)
+            conclusionText += `\n\n**Nota Tambahan (Semua Faktor Pembetulan):** Iz yang dikehendaki (mengambil kira Cᶠ, Cᴬ, Cᴳ, Cᴵ, Cᵀ) adalah ${Iz_required_all_cfactors.toFixed(2)} A. Sila rujuk jadual IEE yang sesuai berdasarkan nilai ini.`;
+
+            // display conclusion
+            const conclEl = document.getElementById('conclusion-output');
+            conclEl.innerText = conclusionText;
+
+            // show results
+            resultsSection.style.display = 'block';
+            resultsSection.scrollIntoView({behavior:'smooth', block:'start'});
+        }
+
+        function resetForm(){
+            document.getElementById('kuasa').value = '1500';
+            document.getElementById('voltan').value = '230';
+            document.getElementById('faktor-kuasa').value = '1';
+            document.getElementById('panjang-kabel').value = '25';
+            document.getElementById('mva-m').value = '29';
+            document.getElementById('susutan-dibenarkan').value = '4';
+            document.getElementById('fuse-rating').value = '10';
+            document.getElementById('fuse-correction').value = '0.725';
+            document.getElementById('ca').value = '1';
+            document.getElementById('cg').value = '1';
+            document.getElementById('ci').value = '1';
+            document.getElementById('ct').value = '1';
+
+            const resultsSection = document.getElementById('results-output');
+            resultsSection.style.display = 'none';
+            document.getElementById('conclusion-output').innerText = '';
+            document.getElementById('res-vd-item').className = 'result-item';
+        }
+    </script>
+</body>
+</html>
